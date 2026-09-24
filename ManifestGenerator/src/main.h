@@ -79,10 +79,12 @@ void GenerateManifest(
 std::string NormalizePath(
     const std::filesystem::path& path);
 
+// relativePath must already be NormalizePath()-ed and relative to the
+// scan root. ScanDirectory computes it once per entry and passes it to
+// both functions below instead of each one recomputing it independently.
 bool IsExcluded(
-    const std::filesystem::path& path,
-    const std::filesystem::path& rootPath);
+    const std::string& relativePath);
 
 bool IsCfgFile(
     const std::filesystem::path& path,
-    const std::filesystem::path& rootPath);
+    const std::string& relativePath);

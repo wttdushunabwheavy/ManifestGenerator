@@ -92,336 +92,347 @@ void Interact()
         return;
     }
 
-    std::cout << "\n!";
 
-    std::string command;
-
-    if (!(std::cin >> command))
-        return;
-
-    std::cout << "\n";
-
-
-    // -----------------------------------------------------
-    // HELP
-    // -----------------------------------------------------
-
-    if (command == "help")
-{
-    std::cout
-        << "Configuration:\n\n"
-
-        << "  !setupcfg\n"
-        << "      Create/reset CfgFiles.cfg.\n"
-        << "      Add relative paths of CFG files.\n\n"
-
-        << "  !setupcfgext\n"
-        << "      Create/reset CfgExtensions.cfg.\n"
-        << "      Add extensions treated as CFG.\n\n"
-
-        << "  !setupnoncfg\n"
-        << "      Create/reset NonCfgFiles.cfg.\n"
-        << "      Add relative paths of non-CFG files.\n\n"
-
-        << "  !setupexcluded\n"
-        << "      Create/reset ExcludedPaths.cfg.\n"
-        << "      Add files or folders that should never be scanned.\n\n"
-
-        << "  !noncfgauto\n"
-        << "      Enable automatic non-CFG mode.\n"
-        << "      Every file that is not CFG is included.\n\n"
-
-        << "  !noncfgmanual\n"
-        << "      Enable manual non-CFG mode.\n"
-        << "      Only files from NonCfgFiles.cfg are included.\n\n"
-
-
-        << "Scanning:\n\n"
-
-        << "  !scancfg\n"
-        << "      Scan CFG files and print them.\n\n"
-
-        << "  !scannoncfg\n"
-        << "      Scan non-CFG files and print them.\n\n"
-
-
-        << "Manifest generation:\n\n"
-
-        << "  !generatecfgmanifest\n"
-        << "      Generate CfgManifest.txt.\n\n"
-
-        << "  !generatenoncfgmanifest\n"
-        << "      Generate Manifest.txt.\n\n"
-
-        << "  !generateboth(gb)\n"
-        << "      Generate both manifests.\n\n"
-
-
-        << "Quick start:\n\n"
-
-        << "  First setup:\n"
-        << "      !setupcfg -> !setupcfgext -> !setupexcluded\n\n"
-
-        << "  CFG manifest:\n"
-        << "      Configure CfgFiles.cfg/CfgExtensions.cfg\n"
-        << "      -> !generatecfgmanifest\n\n"
-
-        << "  Non-CFG automatic:\n"
-        << "      !noncfgauto -> !generatenoncfgmanifest\n\n"
-
-        << "  Non-CFG manual:\n"
-        << "      Configure NonCfgFiles.cfg\n"
-        << "      -> !noncfgmanual -> !generatenoncfgmanifest\n\n"
-
-        << "  Both manifests:\n"
-        << "      Configure files\n"
-        << "      -> !generateboth\n\n"
-
-        << "  Check before generation:\n"
-        << "      !scancfg / !scannoncfg\n\n";
-
-    Interact();
-}
-
-
-    // -----------------------------------------------------
-    // CONFIG SETUP
-    // -----------------------------------------------------
-
-    else if (command == "setupcfg")
+    // Loops for the lifetime of the session instead of recursing once per
+    // command. The old version called Interact() again from the bottom of
+    // every branch, so a long interactive session (hundreds/thousands of
+    // commands) kept growing the call stack with no upper bound and could
+    // eventually overflow it. A loop does the same job with O(1) stack use.
+    while (true)
     {
-        SetupCfgPaths(
-            currentPath / "CfgFiles.cfg");
+        std::cout << "\n!";
 
-        Interact();
-    }
+        std::string command;
 
-    else if (command == "setupcfgext")
-    {
-        SetupCfgExtensions(
-            currentPath / "CfgExtensions.cfg");
-
-        Interact();
-    }
-
-    else if (command == "setupnoncfg")
-    {
-        SetupNonCfgPaths(
-            currentPath / "NonCfgFiles.cfg");
-
-        Interact();
-    }
-
-    else if (command == "setupexcluded")
-    {
-        SetupExcludedPaths(
-            currentPath / "ExcludedPaths.cfg");
-
-        Interact();
-    }
-
-
-    // -----------------------------------------------------
-    // NON-CFG MODE
-    // -----------------------------------------------------
-
-    else if (command == "noncfgauto")
-    {
-        NonCfgMode =
-            ENonCfgMode::Automatic;
-
-        std::cout
-            << "Non-CFG automatic mode enabled.\n";
-
-        Interact();
-    }
-
-    else if (command == "noncfgmanual")
-    {
-        NonCfgMode =
-            ENonCfgMode::Manual;
-
-        std::cout
-            << "Non-CFG manual mode enabled.\n";
-
-        Interact();
-    }
-
-
-    // -----------------------------------------------------
-    // SCAN CFG
-    // -----------------------------------------------------
-
-    else if (command == "scancfg")
-    {
-        Files.clear();
-
-        ScanDirectory(
-            filesPath,
-            filesPath,
-            EScanMode::Cfg);
-        
-
-        std::cout
-            << "Found "
-            << Files.size()
-            << " CFG files.\n\n";
-
-        for (const FFileData& file : Files)
+        if (!(std::cin >> command))
         {
-            std::cout
-                << file.path.lexically_relative(currentPath)
-                << '\n';
+            return;
         }
 
-        Interact();
-    }
+        std::cout << "\n";
 
 
-    // -----------------------------------------------------
-    // SCAN NON-CFG
-    // -----------------------------------------------------
+        // -----------------------------------------------------
+        // HELP
+        // -----------------------------------------------------
 
-    else if (command == "scannoncfg")
-    {
-        Files.clear();
-
-        ScanDirectory(
-            filesPath,
-            filesPath,
-            EScanMode::NonCfg);
-
-        std::cout
-            << "Found "
-            << Files.size()
-            << " non-CFG files.\n\n";
-
-        for (const FFileData& file : Files)
+        if (command == "help")
         {
             std::cout
-                << file.path.lexically_relative(currentPath)
-                << '\n';
+                << "Configuration:\n\n"
+
+                << "  !setupcfg\n"
+                << "      Create/reset CfgFiles.cfg.\n"
+                << "      Add relative paths of CFG files.\n\n"
+
+                << "  !setupcfgext\n"
+                << "      Create/reset CfgExtensions.cfg.\n"
+                << "      Add extensions treated as CFG.\n\n"
+
+                << "  !setupnoncfg\n"
+                << "      Create/reset NonCfgFiles.cfg.\n"
+                << "      Add relative paths of non-CFG files.\n\n"
+
+                << "  !setupexcluded\n"
+                << "      Create/reset ExcludedPaths.cfg.\n"
+                << "      Add files or folders that should never be scanned.\n\n"
+
+                << "  !noncfgauto\n"
+                << "      Enable automatic non-CFG mode.\n"
+                << "      Every file that is not CFG is included.\n\n"
+
+                << "  !noncfgmanual\n"
+                << "      Enable manual non-CFG mode.\n"
+                << "      Only files from NonCfgFiles.cfg are included.\n\n"
+
+
+                << "Scanning:\n\n"
+
+                << "  !scancfg\n"
+                << "      Scan CFG files and print them.\n\n"
+
+                << "  !scannoncfg\n"
+                << "      Scan non-CFG files and print them.\n\n"
+
+
+                << "Manifest generation:\n\n"
+
+                << "  !generatecfgmanifest\n"
+                << "      Generate CfgManifest.txt.\n\n"
+
+                << "  !generatenoncfgmanifest\n"
+                << "      Generate Manifest.txt.\n\n"
+
+                << "  !generateboth(gb)\n"
+                << "      Generate both manifests.\n\n"
+
+
+                << "Quick start:\n\n"
+
+                << "  First setup:\n"
+                << "      !setupcfg -> !setupcfgext -> !setupexcluded\n\n"
+
+                << "  CFG manifest:\n"
+                << "      Configure CfgFiles.cfg/CfgExtensions.cfg\n"
+                << "      -> !generatecfgmanifest\n\n"
+
+                << "  Non-CFG automatic:\n"
+                << "      !noncfgauto -> !generatenoncfgmanifest\n\n"
+
+                << "  Non-CFG manual:\n"
+                << "      Configure NonCfgFiles.cfg\n"
+                << "      -> !noncfgmanual -> !generatenoncfgmanifest\n\n"
+
+                << "  Both manifests:\n"
+                << "      Configure files\n"
+                << "      -> !generateboth\n\n"
+
+                << "  Check before generation:\n"
+                << "      !scancfg / !scannoncfg\n\n";
+
+            continue;
         }
 
-        Interact();
-    }
+
+        // -----------------------------------------------------
+        // CONFIG SETUP
+        // -----------------------------------------------------
+
+        else if (command == "setupcfg")
+        {
+            SetupCfgPaths(
+                currentPath / "CfgFiles.cfg");
+
+            continue;
+        }
+
+        else if (command == "setupcfgext")
+        {
+            SetupCfgExtensions(
+                currentPath / "CfgExtensions.cfg");
+
+            continue;
+        }
+
+        else if (command == "setupnoncfg")
+        {
+            SetupNonCfgPaths(
+                currentPath / "NonCfgFiles.cfg");
+
+            continue;
+        }
+
+        else if (command == "setupexcluded")
+        {
+            SetupExcludedPaths(
+                currentPath / "ExcludedPaths.cfg");
+
+            continue;
+        }
 
 
-    // -----------------------------------------------------
-    // GENERATE CFG MANIFEST
-    // -----------------------------------------------------
+        // -----------------------------------------------------
+        // NON-CFG MODE
+        // -----------------------------------------------------
 
-    else if (command == "generatecfgmanifest")
-    {
-        Files.clear();
+        else if (command == "noncfgauto")
+        {
+            NonCfgMode =
+                ENonCfgMode::Automatic;
 
-        ScanDirectory(
-            filesPath,
-            filesPath,
-            EScanMode::Cfg);
+            std::cout
+                << "Non-CFG automatic mode enabled.\n";
 
-        std::cout
-            << "Found "
-            << Files.size()
-            << " CFG files.\n";
+            continue;
+        }
 
-        HashFiles();
+        else if (command == "noncfgmanual")
+        {
+            NonCfgMode =
+                ENonCfgMode::Manual;
 
-        GenerateManifest(
-            currentPath / "CfgManifest.txt",
-            currentPath);
+            std::cout
+                << "Non-CFG manual mode enabled.\n";
 
-        Interact();
-    }
-
-
-    // -----------------------------------------------------
-    // GENERATE NON-CFG MANIFEST
-    // -----------------------------------------------------
-
-    else if (command == "generatenoncfgmanifest")
-    {
-        Files.clear();
-
-        ScanDirectory(
-            filesPath,
-            filesPath,
-            EScanMode::NonCfg);
-
-        std::cout
-            << "Found "
-            << Files.size()
-            << " non-CFG files.\n";
-
-        HashFiles();
-
-        GenerateManifest(
-            currentPath / "Manifest.txt",
-            currentPath);
-
-        Interact();
-    }
+            continue;
+        }
 
 
-    // -----------------------------------------------------
-    // GENERATE BOTH
-    // -----------------------------------------------------
+        // -----------------------------------------------------
+        // SCAN CFG
+        // -----------------------------------------------------
 
-    else if (command == "generateboth" || command == "gb")
-    {
-        // CFG
-        Files.clear();
+        else if (command == "scancfg")
+        {
+            Files.clear();
 
-        ScanDirectory(
-            filesPath,
-            filesPath,
-            EScanMode::Cfg);
-
-        std::cout
-            << "Found "
-            << Files.size()
-            << " CFG files.\n";
-
-        HashFiles();
-
-        GenerateManifest(
-            currentPath / "CfgManifest.txt",
-            currentPath);
+            ScanDirectory(
+                filesPath,
+                filesPath,
+                EScanMode::Cfg);
 
 
-        // NON-CFG
-        Files.clear();
+            std::cout
+                << "Found "
+                << Files.size()
+                << " CFG files.\n\n";
 
-        ScanDirectory(
-            filesPath,
-            filesPath,
-            EScanMode::NonCfg);
+            for (const FFileData& file : Files)
+            {
+                std::cout
+                    << file.path.lexically_relative(currentPath)
+                    << '\n';
+            }
 
-        std::cout
-            << "Found "
-            << Files.size()
-            << " non-CFG files.\n";
-
-        HashFiles();
-
-        GenerateManifest(
-            currentPath / "Manifest.txt",
-            currentPath);
-
-        Interact();
-    }
+            continue;
+        }
 
 
-    // -----------------------------------------------------
-    // UNKNOWN COMMAND
-    // -----------------------------------------------------
+        // -----------------------------------------------------
+        // SCAN NON-CFG
+        // -----------------------------------------------------
 
-    else
-    {
-        std::cout
-            << "Invalid command.\n";
+        else if (command == "scannoncfg")
+        {
+            Files.clear();
 
-        Interact();
+            ScanDirectory(
+                filesPath,
+                filesPath,
+                EScanMode::NonCfg);
+
+            std::cout
+                << "Found "
+                << Files.size()
+                << " non-CFG files.\n\n";
+
+            for (const FFileData& file : Files)
+            {
+                std::cout
+                    << file.path.lexically_relative(currentPath)
+                    << '\n';
+            }
+
+            continue;
+        }
+
+
+        // -----------------------------------------------------
+        // GENERATE CFG MANIFEST
+        // -----------------------------------------------------
+
+        else if (command == "generatecfgmanifest")
+        {
+            Files.clear();
+
+            ScanDirectory(
+                filesPath,
+                filesPath,
+                EScanMode::Cfg);
+
+            std::cout
+                << "Found "
+                << Files.size()
+                << " CFG files.\n";
+
+            HashFiles();
+
+            GenerateManifest(
+                currentPath / "CfgManifest.txt",
+                currentPath);
+
+            continue;
+        }
+
+
+        // -----------------------------------------------------
+        // GENERATE NON-CFG MANIFEST
+        // -----------------------------------------------------
+
+        else if (command == "generatenoncfgmanifest")
+        {
+            Files.clear();
+
+            ScanDirectory(
+                filesPath,
+                filesPath,
+                EScanMode::NonCfg);
+
+            std::cout
+                << "Found "
+                << Files.size()
+                << " non-CFG files.\n";
+
+            HashFiles();
+
+            GenerateManifest(
+                currentPath / "Manifest.txt",
+                currentPath);
+
+            continue;
+        }
+
+
+        // -----------------------------------------------------
+        // GENERATE BOTH
+        // -----------------------------------------------------
+
+        else if (command == "generateboth" || command == "gb")
+        {
+            // CFG
+            Files.clear();
+
+            ScanDirectory(
+                filesPath,
+                filesPath,
+                EScanMode::Cfg);
+
+            std::cout
+                << "Found "
+                << Files.size()
+                << " CFG files.\n";
+
+            HashFiles();
+
+            GenerateManifest(
+                currentPath / "CfgManifest.txt",
+                currentPath);
+
+
+            // NON-CFG
+            Files.clear();
+
+            ScanDirectory(
+                filesPath,
+                filesPath,
+                EScanMode::NonCfg);
+
+            std::cout
+                << "Found "
+                << Files.size()
+                << " non-CFG files.\n";
+
+            HashFiles();
+
+            GenerateManifest(
+                currentPath / "Manifest.txt",
+                currentPath);
+
+            continue;
+        }
+
+
+        // -----------------------------------------------------
+        // UNKNOWN COMMAND
+        // -----------------------------------------------------
+
+        else
+        {
+            std::cout
+                << "Invalid command.\n";
+
+            continue;
+        }
     }
 }
 
@@ -724,31 +735,46 @@ void SetupExcludedPaths(
 // =========================================================
 
 bool IsExcluded(
-    const std::filesystem::path& path,
-    const std::filesystem::path& rootPath)
+    const std::string& relativePath)
 {
-    const std::string relative =
-        NormalizePath(
-            path.lexically_relative(rootPath));
-
-    if (relative.empty())
+    if (relativePath.empty())
     {
         return false;
     }
 
-    for (const std::string& excluded :
-         ExcludedPaths)
+
+    // Exact match: O(1) hash lookup instead of a linear scan over every
+    // entry in ExcludedPaths.
+    if (ExcludedPaths.contains(relativePath))
     {
-        if (relative == excluded)
+        return true;
+    }
+
+
+    // Nested-in-an-excluded-folder match: walk this path's own ancestor
+    // prefixes ("a", "a/b", "a/b/c", ...) and look each one up directly,
+    // instead of scanning ExcludedPaths and allocating "excluded + '/'"
+    // for every candidate on every call. Cost is now O(depth) hash
+    // lookups instead of O(ExcludedPaths.size()) string comparisons.
+    //
+    // In the current ScanDirectory, this loop is effectively redundant
+    // the moment it runs: recursion is already pruned as soon as an
+    // ancestor folder matches, so a file's ancestors are never excluded
+    // by the time IsExcluded is called on it. It's kept so the function
+    // is correct on its own, independent of that caller detail.
+    auto separator =
+        relativePath.find('/');
+
+    while (separator != std::string::npos)
+    {
+        if (ExcludedPaths.contains(
+                relativePath.substr(0, separator)))
         {
             return true;
         }
 
-        if (relative.starts_with(
-                excluded + "/"))
-        {
-            return true;
-        }
+        separator =
+            relativePath.find('/', separator + 1);
     }
 
     return false;
@@ -761,15 +787,10 @@ bool IsExcluded(
 
 bool IsCfgFile(
     const std::filesystem::path& path,
-    const std::filesystem::path& rootPath)
+    const std::string& relativePath)
 {
-    const std::string relative =
-        NormalizePath(
-            path.lexically_relative(rootPath));
-
-
     // Explicitly listed CFG file
-    if (CfgPaths.contains(relative))
+    if (CfgPaths.contains(relativePath))
     {
         return true;
     }
@@ -825,6 +846,18 @@ void ScanDirectory(
 
     for (const auto& entry : iterator)
     {
+        const std::filesystem::path& entryPath =
+            entry.path();
+
+        // Computed once per entry and reused for the exclusion check, the
+        // CFG check and the manual non-CFG lookup below, instead of each
+        // of those recomputing lexically_relative()+NormalizePath() on
+        // their own (up to 3x per file in the old code).
+        const std::string relative =
+            NormalizePath(
+                entryPath.lexically_relative(rootPath));
+
+
         if (entry.is_directory(ec))
         {
             if (ec)
@@ -835,16 +868,14 @@ void ScanDirectory(
 
 
             // Do not recurse into excluded folders.
-            if (IsExcluded(
-                    entry.path(),
-                    rootPath))
+            if (IsExcluded(relative))
             {
                 continue;
             }
 
 
             ScanDirectory(
-                entry.path(),
+                entryPath,
                 rootPath,
                 mode);
 
@@ -859,9 +890,7 @@ void ScanDirectory(
         }
 
 
-        if (IsExcluded(
-                entry.path(),
-                rootPath))
+        if (IsExcluded(relative))
         {
             continue;
         }
@@ -869,8 +898,8 @@ void ScanDirectory(
 
         const bool isCfg =
             IsCfgFile(
-                entry.path(),
-                rootPath);
+                entryPath,
+                relative);
 
 
         bool add = false;
@@ -902,11 +931,6 @@ void ScanDirectory(
             else
             {
                 // Only explicitly listed files.
-                const std::string relative =
-                    NormalizePath(
-                        entry.path()
-                            .lexically_relative(rootPath));
-
                 add =
                     NonCfgPaths.contains(relative);
             }
@@ -922,11 +946,11 @@ void ScanDirectory(
         FFileData fileData;
 
         fileData.path =
-            entry.path();
+            entryPath;
 
         fileData.size =
             std::filesystem::file_size(
-                entry.path(),
+                entryPath,
                 ec);
 
 
@@ -934,7 +958,7 @@ void ScanDirectory(
         {
             std::cerr
                 << "Failed to get file size: "
-                << entry.path()
+                << entryPath
                 << " | "
                 << ec.message()
                 << '\n';
